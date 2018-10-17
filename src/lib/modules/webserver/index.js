@@ -21,6 +21,7 @@ class WebServer {
       return;
     }
 
+    this.protocol = this.webServerConfig.https ? 'https' : 'http';
     this.host = this.webServerConfig.host;
     this.port = parseInt(this.webServerConfig.port, 10);
     this.enableCatchAll = this.webServerConfig.enableCatchAll === true;
@@ -40,7 +41,9 @@ class WebServer {
       host: this.host,
       port: this.port,
       plugins: this.plugins,
-      openBrowser: this.webServerConfig.openBrowser
+      openBrowser: this.webServerConfig.openBrowser,
+      protocol: this.protocol,
+      certOptions: this.getCertOptions()
     });
 
     this.listenToCommands();
@@ -54,6 +57,8 @@ class WebServer {
       this.port = this.webServerConfig.port;
       this.server.host = this.host;
       this.server.port = this.port;
+      this.server.protocol = this.protocol;
+      this.server.certOptions = this.getCertOptions();
 
       this.testPort(() => {
         this.events.request('processes:stop', 'webserver', _err => {
@@ -75,13 +80,29 @@ class WebServer {
     });
   }
 
+  getCertOptions() {
+    if (this.protocol === 'https') {
+      try {
+        return {
+          key: fs.readFileSync(this.webServerConfig.key),
+          cert: fs.readFileSync(this.webServerConfig.cert)
+        }
+      } catch (e) {
+        this.logger.error(e.message)
+        this.logger.error('No valid path to cert/key found in config/webserver.json, falling back to http');
+        this.protocol = 'http';
+        this.server.protocol = 'http';
+      }
+    }
+  }
+
   testPort(done) {
     if (this.port === 0) {
       this.logger.warn(__('Assigning an available port'));
       this.server.port = 0;
       return done();
     }
-    utils.pingEndpoint(this.host, this.port, 'http', 'http', '', (err) => {
+    utils.pingEndpoint(this.host, this.port, this.protocol, this.protocol, '', (err) => {
       if (err) { // Port is ok
         return done();
       }
@@ -96,7 +117,7 @@ class WebServer {
     const self = this;
 
     this.events.request("services:register", 'Webserver', function (cb) {
-      let url = 'http://' + canonicalHost(self.host) + ':' + self.port;
+      let url = this.protocol + '://' + canonicalHost(self.host) + ':' + self.port;
       utils.checkIsAvailable(url, function (available) {
         let devServer = __('Webserver') + ' (' + url + ')';
         let serverStatus = (available ? 'on' : 'off');
@@ -165,7 +186,7 @@ class WebServer {
   openBrowser(cb) {
     const _cb = () => { cb(); };
     return opn(
-      `http://${canonicalHost(this.server.hostname)}:${this.server.port}`,
+      `${this.protocol}://${canonicalHost(this.server.hostname)}:${this.server.port}`,
       {wait: false}
     ).then(_cb, _cb); // fail silently, e.g. in a docker container
   }

@@ -4,6 +4,7 @@ const {canonicalHost, defaultHost, dockerHostSwap} = require('../../utils/host')
 const expressWebSocket = require('express-ws');
 const express = require('express');
 const fs = require('../../core/fs');
+const https = require('https');
 require('http-shutdown').extend();
 var cors = require('cors');
 let path = require('path');
@@ -25,6 +26,9 @@ class Server {
     this.plugins = options.plugins;
     this.enableCatchAll = options.enableCatchAll;
 
+    this.protocol = options.protocol;
+    this.certOptions = options.certOptions;
+    
     this.events.once('outputDone', () => {
       this.logger.info(this._getMessage());
     });
@@ -55,7 +59,9 @@ class Server {
     const main = serveStatic(this.buildDir, {'index': ['index.html', 'index.htm']});
 
     this.app = express();
-    const expressWs = expressWebSocket(this.app);
+    this.secureServer = this.protocol === 'https' ? https.createServer(self.certOptions, (req, res) => self.app.handle(req, res)) : null;
+    const expressWs = this.protocol === 'https' ? expressWebSocket(this.app, this.secureServer) : expressWebSocket(this.app);
+    
     // Assign Logging Function
     this.app.use(function(req, res, next) {
       if (self.logging) {
@@ -137,7 +143,11 @@ class Server {
         self.events.request('build-placeholder', next);
       },
       function listen(next) {
-        self.server = self.app.listen(self.port, self.hostname, () => {
+        self.server = self.protocol === 'https' ? self.secureServer.listen(self.port, self.hostname, () => {
+          self.port = self.secureServer.address().port;
+          next();
+        }) :
+        self.app.listen(self.port, self.hostname, () => {
           self.port = self.server.address().port;
           next();
         });
@@ -160,7 +170,7 @@ class Server {
 
   _getMessage() {
     return __('webserver available at') + ' ' +
-    ('http://' + canonicalHost(this.hostname) + ':' + this.port).bold.underline.green;
+    (this.protocol + '://' + canonicalHost(this.hostname) + ':' + this.port).bold.underline.green;
   }
 
   applyAPIFunction(cb, req, res) {
