@@ -58,7 +58,17 @@ class Provider {
         self.logger.warn('Error while getting the node\'s accounts.', err.message || err);
       }
 
+      self.blockchainAccounts = AccountParser.parseAccountsConfig(self.blockchainConfig.accounts, self.web3, self.logger, accounts);
+
+      accounts = accounts.concat(self.blockchainAccounts.map(acc => acc.address));
+
       self.accounts = AccountParser.parseAccountsConfig(self.accountsConfig, self.web3, self.logger, accounts);
+
+      if (!self.accounts.length) {
+        self.accounts = accounts.map(accAddress => {
+          return {address: accAddress};
+        });
+      }
       self.addresses = [];
 
       self.accounts.forEach(account => {
@@ -67,6 +77,7 @@ class Provider {
           self.web3.eth.accounts.wallet.add(account);
         }
       });
+      self.addresses = [...new Set(self.addresses)]; // Remove duplicates
 
       if (self.accounts.length) {
         self.web3.eth.defaultAccount = self.addresses[0];
