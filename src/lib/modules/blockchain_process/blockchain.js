@@ -15,7 +15,7 @@ const Logger = require('../../core/logger');
 // time between IPC connection attempts (in ms)
 const IPC_CONNECT_INTERVAL = 2000;
 
-/*eslint complexity: ["error", 44]*/
+/*eslint complexity: ["error", 50]*/
 var Blockchain = function(userConfig, clientClass) {
   this.userConfig = userConfig;
   this.env = userConfig.env || 'development';
@@ -80,6 +80,7 @@ var Blockchain = function(userConfig, clientClass) {
       };
     }
   }
+  this.config.account.devPassword = fs.dappPath(".embark/development/datadir/development/devPassword");
 
   if (this.userConfig === {} || this.userConfig.default || JSON.stringify(this.userConfig) === '{"enabled":true}') {
     if (this.env === 'development') {
@@ -356,11 +357,9 @@ Blockchain.prototype.initDevChain = function(callback) {
           // List current addresses
           self.config.unlockAddressList = self.client.parseListAccountsCommandResultToAddressList(stdout);
           // Count current addresses and remove the default account from the count (because password can be different)
-          let addressCount = self.client.parseListAccountsCommandResultToAddressCount(stdout);
-          let utilityAddressCount = (addressCount > 1 ? addressCount - 1 : 0);
-          let accountsToCreate = self.config.account.numAccounts - utilityAddressCount;
-          if (accountsToCreate > 0) {
-            next(null, accountsToCreate);
+          let addressCount = self.config.unlockAddressList.length;
+          if (addressCount < needToCreateOtherAccounts) {
+            next(null, needToCreateOtherAccounts - addressCount);
           } else {
             next(ACCOUNTS_ALREADY_PRESENT);
           }
@@ -414,7 +413,7 @@ Blockchain.prototype.initChainAndGetAddress = function (callback) {
     function listAccounts(next) {
       self.runCommand(self.client.listAccountsCommand(), {}, (err, stdout, _stderr) => {
         if (err || stdout === undefined || stdout.indexOf("Fatal") >= 0) {
-          this.logger.info(__("no accounts found").green);
+          self.logger.info(__("no accounts found").green);
           return next();
         }
         let firstAccountFound = self.client.parseListAccountsCommandResultToAddress(stdout);
@@ -422,7 +421,7 @@ Blockchain.prototype.initChainAndGetAddress = function (callback) {
           console.log(__("no accounts found").green);
           return next();
         }
-        this.logger.info(__("already initialized").green);
+        self.logger.info(__("already initialized").green);
         address = firstAccountFound;
         next(ALREADY_INITIALIZED);
       });

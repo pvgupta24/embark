@@ -174,9 +174,8 @@ class ParityClient {
   }
 
   parseListAccountsCommandResultToAddressList(data = "") {
-    let list = data.split(os.EOL);
-    list.pop();
-    return list;
+    const list = data.split('\n');
+    return list.filter(acc => acc);
   }
 
   parseListAccountsCommandResultToAddressCount(data = "") {
@@ -245,6 +244,7 @@ class ParityClient {
       function updatePasswordFile(next) {
         if (self.config.account.password) {
           let passwordList = os.EOL + (self.config.account.password ? fs.readFileSync(fs.dappPath(self.config.account.password), 'utf8').replace('\n', '') : 'dev_password');
+          // FIXME
           fs.writeFileSync(self.config.account.devPassword, passwordList, function(err) {
             return next(err);
           });
