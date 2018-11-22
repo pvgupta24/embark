@@ -1,6 +1,5 @@
 const async = require('async');
 const GethMiner = require('./miner');
-const os = require('os');
 const semver = require('semver');
 
 const DEFAULTS = {

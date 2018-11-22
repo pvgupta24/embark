@@ -32,7 +32,7 @@ class Simulator {
     if (this.blockchainConfig.simulatorMnemonic) {
       // TODO add url for documentation
       this.logger.error(__('The `simulatorMnemonic` config for the blockchain was removed. Please use `accounts` instead.'));
-      process.exit();
+      process.exit(1);
     }
     // adding mnemonic only if it is defined in the blockchainConfig or options
     const mnemonicAccount = this.blockchainConfig.accounts.find(acc => acc.mnemonic) || {};

@@ -70,7 +70,6 @@ describe('embark.Blockchain', function() {
           mine: true,
           vmdebug: false,
           whisper: false,
-          account: {},
           devPassword: "foo/bar/devpassword",
           bootnodes: "",
           wsApi: ["eth", "web3", "net", "shh", "debug", "personal"],
@@ -81,7 +80,18 @@ describe('embark.Blockchain', function() {
           targetGasLimit: false,
           syncMode: undefined,
           verbosity: undefined,
-          proxy: true
+          proxy: true,
+          accounts: [
+            {
+              nodeAccounts: true,
+              numAddresses: "2",
+              password: "config/development/devpassword"
+            },
+            {
+              mnemonic: "example exile argue silk regular smile grass bomb merge arm assist farm",
+              numAddresses: "3"
+            }
+          ]
         };
         let blockchain = new Blockchain(config);
 
@@ -103,7 +113,6 @@ describe('embark.Blockchain', function() {
           mine: true,
           vmdebug: false,
           whisper: false,
-          account: {},
           devPassword: "foo/bar/devpassword",
           bootnodes: "",
           wsApi: ["eth", "web3", "net", "shh", "debug", "personal"],
@@ -115,7 +124,12 @@ describe('embark.Blockchain', function() {
           syncMode: undefined,
           verbosity: undefined,
           proxy: true,
-          silent: undefined
+          silent: undefined,
+          account: {
+            numAccounts: 2,
+            password: "config/development/devpassword",
+            balance: undefined
+          }
         };
         // We check also proxy's ports because proxy is set to true
         expectedConfig.wsPort += constants.blockchain.servicePortOnProxy;

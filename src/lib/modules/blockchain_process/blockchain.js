@@ -30,7 +30,7 @@ var Blockchain = function(userConfig, clientClass) {
   if (this.userConfig.account) {
     // TODO add url for documentation
     this.logger.error(__('The `account` config for the blockchain was removed. Please use `accounts` instead.'));
-    process.exit();
+    process.exit(1);
   }
 
 
@@ -73,7 +73,7 @@ var Blockchain = function(userConfig, clientClass) {
   if (this.userConfig.accounts) {
     const nodeAccounts = this.userConfig.accounts.find(account => account.nodeAccounts);
     if (nodeAccounts) {
-      this.config.account ={
+      this.config.account = {
         numAccounts: nodeAccounts.numAddresses || 1,
         password: nodeAccounts.password,
         balance: nodeAccounts.balance
@@ -96,15 +96,15 @@ var Blockchain = function(userConfig, clientClass) {
   const spaceMessage = 'The path for %s in blockchain config contains spaces, please remove them';
   if (this.config.datadir && this.config.datadir.indexOf(' ') > 0) {
     this.logger.error(__(spaceMessage, 'datadir'));
-    process.exit();
+    process.exit(1);
   }
   if (this.config.account.password && this.config.account.password.indexOf(' ') > 0) {
     this.logger.error(__(spaceMessage, 'accounts.password'));
-    process.exit();
+    process.exit(1);
   }
   if (this.config.genesisBlock && this.config.genesisBlock.indexOf(' ') > 0) {
     this.logger.error(__(spaceMessage, 'genesisBlock'));
-    process.exit();
+    process.exit(1);
   }
   this.initProxy();
   this.client = new clientClass({config: this.config, env: this.env, isDev: this.isDev});
