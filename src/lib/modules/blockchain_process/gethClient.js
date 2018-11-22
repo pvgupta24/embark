@@ -56,7 +56,7 @@ class GethClient {
     return false;
   }
 
-  commonOptions(firstAccount = false) {
+  commonOptions() {
     let config = this.config;
     let cmd = [];
 
@@ -70,10 +70,8 @@ class GethClient {
       cmd.push("--syncmode=" + config.syncMode);
     }
 
-    // geth in dev mode needs the first account to have a blank password, so we use for convenience the same Parity's devpassword
     if (config.account && config.account.password) {
-      if (firstAccount) cmd.push(`--password=${config.account.devPassword}`);
-      else cmd.push(`--password=${config.account.password}`);
+      cmd.push(`--password=${config.account.password}`);
     }
 
     if (Number.isInteger(config.verbosity) && config.verbosity >= 0 && config.verbosity <= 5) {
@@ -140,11 +138,11 @@ class GethClient {
     return cmd;
   }
 
-  newAccountCommand(firstAccount = false) {
+  newAccountCommand() {
     if (!(this.config.account && this.config.account.password)) {
       console.warn(__('Your blockchain is missing a password and creating an account may fail. Please consider updating ').yellow + __('config/blockchain > account > password').cyan + __(' then re-run the command').yellow);
     }
-    return this.bin + " " + this.commonOptions(firstAccount).join(' ') + " account new ";
+    return this.bin + " " + this.commonOptions().join(' ') + " account new ";
   }
 
   parseNewAccountCommandResultToAddress(data = "") {
@@ -162,9 +160,13 @@ class GethClient {
   }
 
   parseListAccountsCommandResultToAddressList(data = "") {
-    let list = data.split(os.EOL);
-    list.pop(); // Remove empty value
-    return list.map(el => "0x" + el.match(/{(\w+)}/)[1]);
+    const regex = RegExp(/{(\w+)}/g);
+    let match;
+    const accounts = [];
+    while ((match = regex.exec(data)) !== null) {
+      accounts.push('0x' + match[1]);
+    }
+    return accounts;
   }
 
   parseListAccountsCommandResultToAddressCount(data = "") {

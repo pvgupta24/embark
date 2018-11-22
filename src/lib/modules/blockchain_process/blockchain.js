@@ -15,7 +15,7 @@ const Logger = require('../../core/logger');
 // time between IPC connection attempts (in ms)
 const IPC_CONNECT_INTERVAL = 2000;
 
-/*eslint complexity: ["error", 42]*/
+/*eslint complexity: ["error", 44]*/
 var Blockchain = function(userConfig, clientClass) {
   this.userConfig = userConfig;
   this.env = userConfig.env || 'development';
@@ -26,6 +26,13 @@ var Blockchain = function(userConfig, clientClass) {
   this.events = userConfig.events;
   this.proxyIpc = null;
   this.isStandalone = userConfig.isStandalone;
+
+  if (this.userConfig.account) {
+    // TODO add url for documentation
+    this.logger.error(__('The `account` config for the blockchain was removed. Please use `accounts` instead.'));
+    process.exit();
+  }
+
 
   let defaultWsApi = clientClass.DEFAULTS.WS_API;
   if (this.isDev) defaultWsApi = clientClass.DEFAULTS.DEV_WS_API;
@@ -46,7 +53,7 @@ var Blockchain = function(userConfig, clientClass) {
     port: this.userConfig.port || 30303,
     nodiscover: this.userConfig.nodiscover || false,
     mine: this.userConfig.mine || false,
-    account: this.userConfig.account || {},
+    account: {},
     devPassword: this.userConfig.devPassword || "",
     whisper: (this.userConfig.whisper !== false),
     maxpeers: ((this.userConfig.maxpeers === 0) ? 0 : (this.userConfig.maxpeers || 25)),
@@ -63,12 +70,21 @@ var Blockchain = function(userConfig, clientClass) {
     proxy: this.userConfig.proxy
   };
 
+  if (this.userConfig.accounts) {
+    const nodeAccounts = this.userConfig.accounts.find(account => account.nodeAccounts);
+    if (nodeAccounts) {
+      this.config.account ={
+        numAccounts: nodeAccounts.numAddresses || 1,
+        password: nodeAccounts.password,
+        balance: nodeAccounts.balance
+      };
+    }
+  }
+
   if (this.userConfig === {} || this.userConfig.default || JSON.stringify(this.userConfig) === '{"enabled":true}') {
-    this.config.account = {};
     if (this.env === 'development') {
       this.isDev = true;
     } else {
-      this.config.account.password = fs.embarkPath("templates/boilerplate/config/privatenet/password");
       this.config.genesisBlock = fs.embarkPath("templates/boilerplate/config/privatenet/genesis.json");
     }
     this.config.datadir = fs.dappPath(".embark/development/datadir");
@@ -83,7 +99,7 @@ var Blockchain = function(userConfig, clientClass) {
     process.exit();
   }
   if (this.config.account.password && this.config.account.password.indexOf(' ') > 0) {
-    this.logger.error(__(spaceMessage, 'account.password'));
+    this.logger.error(__(spaceMessage, 'accounts.password'));
     process.exit();
   }
   if (this.config.genesisBlock && this.config.genesisBlock.indexOf(' ') > 0) {
@@ -341,19 +357,16 @@ Blockchain.prototype.initDevChain = function(callback) {
           self.config.unlockAddressList = self.client.parseListAccountsCommandResultToAddressList(stdout);
           // Count current addresses and remove the default account from the count (because password can be different)
           let addressCount = self.client.parseListAccountsCommandResultToAddressCount(stdout);
-          let utilityAddressCount = self.client.parseListAccountsCommandResultToAddressCount(stdout) - 1;
-          utilityAddressCount = (utilityAddressCount > 0 ? utilityAddressCount : 0);
+          let utilityAddressCount = (addressCount > 1 ? addressCount - 1 : 0);
           let accountsToCreate = self.config.account.numAccounts - utilityAddressCount;
           if (accountsToCreate > 0) {
-            next(null, accountsToCreate, addressCount === 0);
+            next(null, accountsToCreate);
           } else {
             next(ACCOUNTS_ALREADY_PRESENT);
           }
         });
       },
-      function newAccounts(accountsToCreate, firstAccount, next) {
-        // At first launch, Geth --dev does not create its own dev account if any other account are present. Parity --dev always does. Make this choerent between the two
-        if (firstAccount && self.client.name === 'geth') accountsToCreate++;
+      function newAccounts(accountsToCreate, next) {
         var accountNumber = 0;
         async.whilst(
           function() {
@@ -361,12 +374,11 @@ Blockchain.prototype.initDevChain = function(callback) {
           },
           function(callback) {
             accountNumber++;
-            self.runCommand(self.client.newAccountCommand(firstAccount), {}, (err, stdout, _stderr) => {
+            self.runCommand(self.client.newAccountCommand(), {}, (err, stdout, _stderr) => {
               if (err) {
                 return callback(err, accountNumber);
               }
               self.config.unlockAddressList.push(self.client.parseNewAccountCommandResultToAddress(stdout));
-              firstAccount = false;
               callback(null, accountNumber);
             });
           },
