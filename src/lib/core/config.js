@@ -233,14 +233,18 @@ Config.prototype.loadBlockchainConfigFile = function() {
     this.blockchainConfig.gasPrice = utils.getWeiBalanceFromString(this.blockchainConfig.gasPrice, web3);
   }
 
-  if (this.blockchainConfig.account && this.blockchainConfig.account.balance && this.blockchainConfig.account.balance.toString().match(unitRegex)) {
-    this.blockchainConfig.account.balance = utils.getWeiBalanceFromString(this.blockchainConfig.account.balance, web3);
+  if (this.blockchainConfig.accounts) {
+    this.blockchainConfig.accounts.forEach(acc => {
+      if (acc.balance && acc.balance.toString().match(unitRegex)) {
+        acc.balance = utils.getWeiBalanceFromString(acc.balance, web3);
+      }
+    });
   }
 
   if (
     !this.shownNoAccountConfigMsg &&
     (/rinkeby|testnet|livenet/).test(this.blockchainConfig.networkType) &&
-    !(this.blockchainConfig.account && this.blockchainConfig.account.address && this.blockchainConfig.account.password) &&
+    !(this.blockchainConfig.accounts && this.blockchainConfig.accounts.find(acc => acc.password)) &&
     !this.blockchainConfig.isDev &&
     this.env !== 'development' && this.env !== 'test') {
       this.logger.warn((

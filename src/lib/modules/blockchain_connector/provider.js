@@ -53,7 +53,7 @@ class Provider {
     }
     self.web3.setProvider(self.provider);
 
-    self.web3.eth.getAccounts((err, accounts) => {
+    self.web3.eth.getAccounts((err, accounts = []) => {
       if (err) {
         self.logger.warn('Error while getting the node\'s accounts.', err.message || err);
       }
@@ -70,7 +70,7 @@ class Provider {
       self.addresses = [];
 
       self.accounts.forEach(account => {
-        self.addresses.push(account.address);
+        self.addresses.push(account.address || account);
         if (account.privateKey) {
           self.web3.eth.accounts.wallet.add(account);
         }
@@ -162,6 +162,9 @@ class Provider {
       return callback();
     }
     async.eachLimit(self.accounts, 1, (account, eachCb) => {
+      if (!account.address) {
+        return eachCb();
+      }
       fundAccount(self.web3, account.address, account.hexBalance, eachCb);
     }, callback);
   }
