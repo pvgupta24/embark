@@ -44,8 +44,11 @@ class AccountParser {
       if (!nodeAccounts.length) {
         return null;
       }
-      return nodeAccounts.map(address => {
-        return {address};
+      return nodeAccounts.map(account => {
+        if (typeof account === 'string') {
+          return {address: account};
+        }
+        return account;
       });
     }
 

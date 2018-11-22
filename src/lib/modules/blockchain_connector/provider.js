@@ -60,14 +60,12 @@ class Provider {
 
       self.blockchainAccounts = AccountParser.parseAccountsConfig(self.blockchainConfig.accounts, self.web3, self.logger, accounts);
 
-      accounts = accounts.concat(self.blockchainAccounts.map(acc => acc.address));
+      accounts = accounts.concat(self.blockchainAccounts);
 
       self.accounts = AccountParser.parseAccountsConfig(self.accountsConfig, self.web3, self.logger, accounts);
 
       if (!self.accounts.length) {
-        self.accounts = accounts.map(accAddress => {
-          return {address: accAddress};
-        });
+        self.accounts = accounts;
       }
       self.addresses = [];
 
