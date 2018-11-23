@@ -1,5 +1,6 @@
 const async = require('async');
 const fs = require('../../core/fs.js');
+const path = require('path');
 const os = require('os');
 const semver = require('semver');
 
@@ -231,8 +232,8 @@ class ParityClient {
   initDevChain(datadir, callback) {
     // Parity requires specific initialization also for the dev chain
     const self = this;
-    const keysDataDir = '.embark/development/datadir/keys/DevelopmentChain';
-    async.series([
+    const keysDataDir = datadir + '/keys/DevelopmentChain';
+    async.waterfall([
       function makeDir(next) {
         fs.mkdirp(keysDataDir, (err, _result) => {
           next(err);
@@ -241,15 +242,24 @@ class ParityClient {
       function createDevAccount(next) {
         self.createDevAccount(keysDataDir, next);
       },
-      function updatePasswordFile(next) {
-        if (self.config.account.password) {
-          let passwordList = os.EOL + (self.config.account.password ? fs.readFileSync(fs.dappPath(self.config.account.password), 'utf8').replace('\n', '') : 'dev_password');
-          // FIXME
-          fs.writeFileSync(self.config.account.devPassword, passwordList, function(err) {
-            return next(err);
-          });
+      function mkDevPasswordDir(next) {
+        fs.mkdirp(path.dirname(self.config.account.devPassword), (err, _result) => {
+          next(err);
+        });
+      },
+      function getText(next) {
+        if (!self.config.account.password) {
+          return next(null, os.EOL + 'dev_password');
         }
-        next();
+        fs.readFile(fs.dappPath(self.config.account.password), {encoding: 'utf8'}, (err, content) => {
+          next(err, os.EOL + content);
+        });
+      },
+      function updatePasswordFile(passwordList, next) {
+        if (!self.config.account.password) {
+          return next();
+        }
+        fs.writeFile(self.config.account.devPassword, passwordList, next);
       }
     ], (err) => {
       callback(err);

@@ -1,5 +1,6 @@
 const async = require('async');
 const {spawn, exec} = require('child_process');
+const path = require('path');
 const fs = require('../../core/fs.js');
 const constants = require('../../constants.json');
 const utils = require('../../utils/utils.js');
@@ -80,7 +81,6 @@ var Blockchain = function(userConfig, clientClass) {
       };
     }
   }
-  this.config.account.devPassword = fs.dappPath(".embark/development/datadir/development/devPassword");
 
   if (this.userConfig === {} || this.userConfig.default || JSON.stringify(this.userConfig) === '{"enabled":true}') {
     if (this.env === 'development') {
@@ -93,6 +93,7 @@ var Blockchain = function(userConfig, clientClass) {
     this.config.rpcCorsDomain = this.config.rpcCorsDomain || "http://localhost:8000";
     this.config.targetGasLimit = 8000000;
   }
+  this.config.account.devPassword = path.join(this.config.datadir, "devPassword");
 
   const spaceMessage = 'The path for %s in blockchain config contains spaces, please remove them';
   if (this.config.datadir && this.config.datadir.indexOf(' ') > 0) {
@@ -339,12 +340,11 @@ Blockchain.prototype.initDevChain = function(callback) {
   // Init the dev chain
   self.client.initDevChain('.embark/development/datadir', (err) => {
     if (err) {
-      console.log(err);
       return callback(err);
     }
 
-    let needToCreateOtherAccounts = self.config.account && self.config.account.numAccounts;
-    if (!needToCreateOtherAccounts) return callback();
+    const accountsToCreate = self.config.account && self.config.account.numAccounts;
+    if (!accountsToCreate) return callback();
 
     // Create other accounts
     async.waterfall([
@@ -358,8 +358,8 @@ Blockchain.prototype.initDevChain = function(callback) {
           self.config.unlockAddressList = self.client.parseListAccountsCommandResultToAddressList(stdout);
           // Count current addresses and remove the default account from the count (because password can be different)
           let addressCount = self.config.unlockAddressList.length;
-          if (addressCount < needToCreateOtherAccounts) {
-            next(null, needToCreateOtherAccounts - addressCount);
+          if (addressCount < accountsToCreate) {
+            next(null, accountsToCreate - addressCount);
           } else {
             next(ACCOUNTS_ALREADY_PRESENT);
           }
