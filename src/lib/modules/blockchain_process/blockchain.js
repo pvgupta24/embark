@@ -45,7 +45,7 @@ var Blockchain = function(userConfig, clientClass) {
     networkType: this.userConfig.networkType || clientClass.DEFAULTS.NETWORK_TYPE,
     networkId: this.userConfig.networkId || clientClass.DEFAULTS.NETWORK_ID,
     genesisBlock: this.userConfig.genesisBlock || false,
-    datadir: this.userConfig.datadir || false,
+    datadir: this.userConfig.datadir || '.embark/' + this.env + '/datadir',
     mineWhenNeeded: this.userConfig.mineWhenNeeded || false,
     rpcHost: dockerHostSwap(this.userConfig.rpcHost) || defaultHost,
     rpcPort: this.userConfig.rpcPort || 8545,
@@ -55,7 +55,6 @@ var Blockchain = function(userConfig, clientClass) {
     nodiscover: this.userConfig.nodiscover || false,
     mine: this.userConfig.mine || false,
     account: {},
-    devPassword: this.userConfig.devPassword || "",
     whisper: (this.userConfig.whisper !== false),
     maxpeers: ((this.userConfig.maxpeers === 0) ? 0 : (this.userConfig.maxpeers || 25)),
     bootnodes: this.userConfig.bootnodes || "",
@@ -338,7 +337,7 @@ Blockchain.prototype.initDevChain = function(callback) {
   const self = this;
   const ACCOUNTS_ALREADY_PRESENT = 'accounts_already_present';
   // Init the dev chain
-  self.client.initDevChain('.embark/development/datadir', (err) => {
+  self.client.initDevChain(self.config.datadir, (err) => {
     if (err) {
       return callback(err);
     }
@@ -402,7 +401,7 @@ Blockchain.prototype.initChainAndGetAddress = function (callback) {
   const ALREADY_INITIALIZED = 'already';
 
   // ensure datadir exists, bypassing the interactive liabilities prompt.
-  self.datadir = '.embark/' + self.env + '/datadir';
+  self.datadir = self.config.datadir;
 
   async.waterfall([
     function makeDir(next) {

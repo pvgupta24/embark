@@ -2,6 +2,7 @@
 const Blockchain = require('../lib/modules/blockchain_process/blockchain.js');
 const constants = require('../lib/constants.json');
 const {defaultHost} = require('../lib/utils/host');
+const path = require('path');
 
 const assert = require('assert');
 
@@ -17,7 +18,7 @@ describe('embark.Blockchain', function() {
           genesisBlock: false,
           ethereumClientName: 'geth',
           ethereumClientBin: 'geth',
-          datadir: false,
+          datadir: '.embark/development/datadir',
           mineWhenNeeded: false,
           rpcHost: defaultHost,
           rpcPort: 8545,
@@ -30,8 +31,7 @@ describe('embark.Blockchain', function() {
           mine: false,
           vmdebug: false,
           whisper: true,
-          account: {},
-          devPassword: "",
+          account: {"devPassword": path.normalize(".embark/development/datadir/devPassword")},
           bootnodes: "",
           wsApi: ["eth", "web3", "net", "shh", "debug", "pubsub", "personal"],
           wsHost: defaultHost,
@@ -70,7 +70,6 @@ describe('embark.Blockchain', function() {
           mine: true,
           vmdebug: false,
           whisper: false,
-          devPassword: "foo/bar/devpassword",
           bootnodes: "",
           wsApi: ["eth", "web3", "net", "shh", "debug", "personal"],
           wsHost: defaultHost,
@@ -113,7 +112,6 @@ describe('embark.Blockchain', function() {
           mine: true,
           vmdebug: false,
           whisper: false,
-          devPassword: "foo/bar/devpassword",
           bootnodes: "",
           wsApi: ["eth", "web3", "net", "shh", "debug", "personal"],
           wsHost: defaultHost,
@@ -126,7 +124,8 @@ describe('embark.Blockchain', function() {
           proxy: true,
           silent: undefined,
           account: {
-            numAccounts: 2,
+            numAccounts: "2",
+            devPassword: path.normalize("/foo/datadir/devPassword"),
             password: "config/development/devpassword",
             balance: undefined
           }
