@@ -15,12 +15,18 @@ class ProcessWrapper {
    * @param {Options}     options    pingParent: true by default
    */
   constructor(options = {}) {
+    // console.log("Before assigninggg " + options.name);
     this.options = Object.assign({pingParent: true}, options);
+    // console.log("Before logggg " + options.name);
     this.interceptLogs();
+    console.log("Before new eventssss " + options.name);
     this.events = new Events();
+    console.log("Before Ping " + options.name);
     if(this.options.pingParent) {
+    console.log("Before Ping inside IFF");
       this.pingParent();
     }
+    console.log("After Print Parent");
   }
 
   // Ping parent to see if it is still alive. Otherwise, let's die
@@ -50,14 +56,18 @@ class ProcessWrapper {
   interceptLogs() {
     const context = {};
     context.console = console;
-
+    console.log("STARTSSS interceptinggggg " + this.options.name);
     context.console.log = this._log.bind(this, 'log');
+    console.log("After interceptinggggg LOGSSSS" + this.options.name);
+
     context.console.warn = this._log.bind(this, 'warn');
     context.console.error = this._log.bind(this, 'error');
     context.console.info = this._log.bind(this, 'info');
     context.console.debug = this._log.bind(this, 'debug');
     context.console.trace = this._log.bind(this, 'trace');
     context.console.dir = this._log.bind(this, 'dir');
+    console.log("ENDSS interceptinggggg" + this.options.name);
+
   }
 
   _log(type, ...messages) {

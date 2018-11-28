@@ -22,6 +22,8 @@ class BlockchainProcessLauncher {
   startBlockchainNode() {
     this.logger.info(__('Starting Blockchain node in another process').cyan);
 
+    console.log("STARTS GETHHHH");
+
     this.blockchainProcess = new ProcessLauncher({
       name: 'blockchain',
       modulePath: utils.joinPath(__dirname, './blockchainProcess.js'),
@@ -37,13 +39,30 @@ class BlockchainProcessLauncher {
         client: this.client,
         env: this.env,
         isDev: this.isDev,
-        locale: this.locale
+        locale: this.locale,
+        embark: {
+          config:{
+            webServerConfig: {
+              
+            }
+          }
+        }
       }
     });
 
     this.blockchainProcess.once('result', constants.blockchain.blockchainReady, () => {
       this.logger.info(__('Blockchain node is ready').cyan);
       this.events.emit(constants.blockchain.blockchainReady);
+
+      console.log("Prints Server CONFIGGGG");
+      console.log(JSON.stringify(this.embark.config.webServerConfig));
+      console.log(JSON.stringify(this.embark.config.webServerConfig.https));
+      if(this.embark.config.webServerConfig.https){
+        console.log("HTTPS");
+      }
+      else{
+        console.log("xxHTTP");
+      }
     });
 
     this.blockchainProcess.once('result', constants.blockchain.blockchainExit, () => {
@@ -56,6 +75,9 @@ class BlockchainProcessLauncher {
 
     this.events.on('logs:ethereum:enable', () => {
       this.blockchainProcess.silent = false;
+
+      console.log("LOGGGG Prints Server CONFIGGGG");
+      console.log(this.embark.config.webServerConfig);
     });
 
     this.events.on('logs:ethereum:disable', () => {

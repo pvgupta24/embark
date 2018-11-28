@@ -66,7 +66,7 @@ const parseResponse = function (ipc, resBody) {
   }
 };
 
-exports.serve = async function (ipc, host, port, ws, origin) {
+exports.serve = async function (ipc, host, port, ws, origin, ssl={}) {
   const _origin = origin ? origin.split(',')[0] : undefined;
   const start = Date.now();
 
@@ -89,6 +89,10 @@ exports.serve = async function (ipc, host, port, ws, origin) {
     target: {
       host: canonicalHost(host),
       port: port
+    },
+    ssl: {
+      key: ssl.key,
+      cert: ssl.cert
     },
     ws: ws
   });

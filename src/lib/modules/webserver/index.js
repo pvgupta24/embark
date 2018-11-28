@@ -42,9 +42,9 @@ class WebServer {
       port: this.port,
       plugins: this.plugins,
       openBrowser: this.webServerConfig.openBrowser,
-      protocol: this.protocol,
-      certOptions: this.getCertOptions()
+      protocol: this.protocol
     });
+    this.server.certOptions = this.getCertOptions();
 
     this.listenToCommands();
     this.registerConsoleCommands();
@@ -86,9 +86,9 @@ class WebServer {
         return {
           key: fs.readFileSync(this.webServerConfig.key),
           cert: fs.readFileSync(this.webServerConfig.cert)
-        }
+        };
       } catch (e) {
-        this.logger.error(e.message)
+        this.logger.error(e.message);
         this.logger.error('No valid path to cert/key found in config/webserver.json, falling back to http');
         this.protocol = 'http';
         this.server.protocol = 'http';

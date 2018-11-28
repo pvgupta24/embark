@@ -26,6 +26,7 @@ var Blockchain = function(userConfig, clientClass) {
   this.events = userConfig.events;
   this.proxyIpc = null;
   this.isStandalone = userConfig.isStandalone;
+  this.ssl = userConfig.ssl;
 
   let defaultWsApi = clientClass.DEFAULTS.WS_API;
   if (this.isDev) defaultWsApi = clientClass.DEFAULTS.DEV_WS_API;
@@ -139,10 +140,10 @@ Blockchain.prototype.setupProxy = async function () {
 
   let wsProxy;
   if (this.config.wsRPC) {
-    wsProxy = proxy.serve(this.proxyIpc, this.config.wsHost, this.config.wsPort, true, this.config.wsOrigins);
+    wsProxy = proxy.serve(this.proxyIpc, this.config.wsHost, this.config.wsPort, true, this.config.wsOrigins, this.ssl);
   }
 
-  [this.rpcProxy, this.wsProxy] = await Promise.all([proxy.serve(this.proxyIpc, this.config.rpcHost, this.config.rpcPort, false), wsProxy]);
+  [this.rpcProxy, this.wsProxy] = await Promise.all([proxy.serve(this.proxyIpc, this.config.rpcHost, this.config.rpcPort, false, undefined, this.ssl), wsProxy]);
 };
 
 Blockchain.prototype.shutdownProxy = function () {
@@ -442,7 +443,7 @@ Blockchain.prototype.initChainAndGetAddress = function (callback) {
   });
 };
 
-var BlockchainClient = function(userConfig, clientName, env, onReadyCallback, onExitCallback, logger, _events, _isStandalone) {
+var BlockchainClient = function(userConfig, clientName, env, ssl, onReadyCallback, onExitCallback, logger, _events, _isStandalone) {
   if ((userConfig === {} || JSON.stringify(userConfig) === '{"enabled":true}') && env !== 'development') {
     logger.info("===> " + __("warning: running default config on a non-development environment"));
   }
@@ -469,6 +470,7 @@ var BlockchainClient = function(userConfig, clientName, env, onReadyCallback, on
   userConfig.onReadyCallback = onReadyCallback;
   userConfig.onExitCallback = onExitCallback;
   userConfig.logger = logger;
+  userConfig.ssl = ssl;
   return new Blockchain(userConfig, clientClass);
 };
 
