@@ -73,8 +73,8 @@ var Blockchain = function(userConfig, clientClass) {
       this.config.genesisBlock = fs.embarkPath("templates/boilerplate/config/privatenet/genesis.json");
     }
     this.config.datadir = fs.dappPath(".embark/development/datadir");
-    this.config.wsOrigins = "http://localhost:8000";
-    this.config.rpcCorsDomain = "http://localhost:8000";
+    this.config.wsOrigins = "https://localhost:8000";
+    this.config.rpcCorsDomain = "https://localhost:8000";
     this.config.targetGasLimit = 8000000;
   }
 

@@ -22,7 +22,7 @@ class BlockchainProcessLauncher {
   startBlockchainNode() {
     this.logger.info(__('Starting Blockchain node in another process').cyan);
 
-    console.log("STARTS GETHHHH");
+    // console.log("STARTS GETHHHH "+ this.embark.config.webServerConfig.key);
 
     this.blockchainProcess = new ProcessLauncher({
       name: 'blockchain',
@@ -43,7 +43,9 @@ class BlockchainProcessLauncher {
         embark: {
           config:{
             webServerConfig: {
-              
+              enabled: true,
+              key: this.embark.config.webServerConfig.key,
+              cert: this.embark.config.webServerConfig.cert
             }
           }
         }
@@ -53,16 +55,16 @@ class BlockchainProcessLauncher {
     this.blockchainProcess.once('result', constants.blockchain.blockchainReady, () => {
       this.logger.info(__('Blockchain node is ready').cyan);
       this.events.emit(constants.blockchain.blockchainReady);
-
-      console.log("Prints Server CONFIGGGG");
-      console.log(JSON.stringify(this.embark.config.webServerConfig));
-      console.log(JSON.stringify(this.embark.config.webServerConfig.https));
-      if(this.embark.config.webServerConfig.https){
-        console.log("HTTPS");
-      }
-      else{
-        console.log("xxHTTP");
-      }
+      //
+      // console.log("Prints Server CONFIGGGG");
+      // console.log(JSON.stringify(this.embark.config.webServerConfig));
+      // console.log(JSON.stringify(this.embark.config.webServerConfig.https));
+      // if(this.embark.config.webServerConfig.https){
+      //   console.log("HTTPS");
+      // }
+      // else{
+      //   console.log("xxHTTP");
+      // }
     });
 
     this.blockchainProcess.once('result', constants.blockchain.blockchainExit, () => {
@@ -75,9 +77,6 @@ class BlockchainProcessLauncher {
 
     this.events.on('logs:ethereum:enable', () => {
       this.blockchainProcess.silent = false;
-
-      console.log("LOGGGG Prints Server CONFIGGGG");
-      console.log(this.embark.config.webServerConfig);
     });
 
     this.events.on('logs:ethereum:disable', () => {

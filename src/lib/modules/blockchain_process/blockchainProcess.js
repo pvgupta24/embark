@@ -8,22 +8,21 @@ let blockchainProcess;
 
 class BlockchainProcess extends ProcessWrapper {
   constructor(options) {
-    // console.log("BEFORE SUPERRR");
-    options.name = "GETHHH";
-    super(options);
+    // console.log("BEFORE SUPERRR" + options.embark.config.webServerConfig.key);
+    // console.log("BEFORE SUPERRR2" + options.embark.config.webServerConfig.cert);
+    // options.name = "GETHHH";
+    super();
     // console.log("After Superrr");
     this.blockchainConfig = options.blockchainConfig;
     this.client = options.client;
     this.env = options.env;
     this.isDev = options.isDev;
-    this.ssl = {
-      enabled: options.embark.config.webServerConfig.https
-    };
+    this.ssl = {};
     console.log("New Blockchain Process");
     try {
-      this.ssl.key = fs.readFileSync(options.embark.config.webServerConfig.key);
-      this.ssl.cert = fs.readFileSync(options.embark.config.webServerConfig.cert);
-      console.log("Using geth proxy");
+      this.ssl.key = options.embark.config.webServerConfig.key;//fs.readFileSync(options.embark.config.webServerConfig.key);
+      this.ssl.cert = options.embark.config.webServerConfig.cert;//;fs.readFileSync(options.embark.config.webServerConfig.cert);
+      console.log("Using geth proxy "+options.embark.config.webServerConfig.key);
     } catch (e) {
       // Can't Use geth proxy
       console.log("Cannot use geth proxy");

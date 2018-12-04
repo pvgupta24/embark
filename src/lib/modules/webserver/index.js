@@ -21,7 +21,7 @@ class WebServer {
       return;
     }
 
-    this.protocol = this.webServerConfig.https ? 'https' : 'http';
+    // this.protocol = this.webServerConfig.https ? 'https' : 'http';
     this.host = this.webServerConfig.host;
     this.port = parseInt(this.webServerConfig.port, 10);
     this.enableCatchAll = this.webServerConfig.enableCatchAll === true;
@@ -42,9 +42,12 @@ class WebServer {
       port: this.port,
       plugins: this.plugins,
       openBrowser: this.webServerConfig.openBrowser,
-      protocol: this.protocol
+      protocol: this.webServerConfig.protocol,
+      certOptions : {
+        key: this.webServerConfig.key,
+        cert: this.webServerConfig.cert
+      }
     });
-    this.server.certOptions = this.getCertOptions();
 
     this.listenToCommands();
     this.registerConsoleCommands();
@@ -57,8 +60,11 @@ class WebServer {
       this.port = this.webServerConfig.port;
       this.server.host = this.host;
       this.server.port = this.port;
-      this.server.protocol = this.protocol;
-      this.server.certOptions = this.getCertOptions();
+      this.server.protocol = this.webServerConfig.protocol;
+      this.server.certOptions = {
+        key: this.webServerConfig.key,
+        cert: this.webServerConfig.cert
+      };
 
       this.testPort(() => {
         this.events.request('processes:stop', 'webserver', _err => {
@@ -80,21 +86,21 @@ class WebServer {
     });
   }
 
-  getCertOptions() {
-    if (this.protocol === 'https') {
-      try {
-        return {
-          key: fs.readFileSync(this.webServerConfig.key),
-          cert: fs.readFileSync(this.webServerConfig.cert)
-        };
-      } catch (e) {
-        this.logger.error(e.message);
-        this.logger.error('No valid path to cert/key found in config/webserver.json, falling back to http');
-        this.protocol = 'http';
-        this.server.protocol = 'http';
-      }
-    }
-  }
+  // getCertOptions() {
+  //   if (this.protocol === 'https') {
+  //     try {
+  //       return {
+  //         key: fs.readFileSync(this.webServerConfig.key),
+  //         cert: fs.readFileSync(this.webServerConfig.cert)
+  //       };
+  //     } catch (e) {
+  //       this.logger.error(e.message);
+  //       this.logger.error('No valid path to cert/key found in config/webserver.json, falling back to http');
+  //       this.protocol = 'http';
+  //       this.server.protocol = 'http';
+  //     }
+  //   }
+  // }
 
   testPort(done) {
     if (this.port === 0) {

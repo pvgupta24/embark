@@ -2,6 +2,7 @@ const httpProxy = require('http-proxy');
 const http = require('http');
 const constants = require('../../constants.json');
 const utils = require('../../utils/utils');
+const fs = require('../../core/fs.js');
 
 let commList = {};
 let transactions = {};
@@ -84,13 +85,17 @@ exports.serve = async function (ipc, host, port, ws, origin, ssl={}) {
   }
 
   await awaitTarget();
-
+  console.log("Proxy key "+ssl.key);
+  console.log("Proxy cert"+ssl.cert);
+  console.log("Proxy host + port"+canonicalHost(host)+"======"+port);
   let proxy = httpProxy.createProxyServer({
     target: {
       host: canonicalHost(host),
       port: port
     },
     ssl: {
+      // key: fs.readFileSync(ssl.key, 'utf8'),
+      // cert: fs.readFileSync(ssl.cert, 'utf8')
       key: ssl.key,
       cert: ssl.cert
     },

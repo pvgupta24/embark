@@ -136,7 +136,9 @@ Config.prototype._updateBlockchainCors = function(){
   let corsParts = cloneDeep(this.corsParts);
 
   if(webServerConfig && webServerConfig.host) {
+    console.log("Adding rpc corssss : "+webServerConfig.protocol);
     corsParts.push(utils.buildUrlFromConfig(webServerConfig));
+    console.log(JSON.stringify(corsParts));
   }
   if(storageConfig && storageConfig.enabled) {
     // if getUrl is specified in the config, that needs to be included in cors
@@ -445,13 +447,26 @@ Config.prototype.loadWebServerConfigFile = function() {
     "host": defaultHost,
     "openBrowser": true,
     "port": 8000,
-    "enableCatchAll": true
+    "enableCatchAll": true,
+    "protocol": "http" 
   };
 
   let configFilePath = this._getFileOrOject(this.configDir, 'webserver', 'webserver');
 
   let webServerConfig = this._mergeConfig(configFilePath, configObject, false);
 
+  if (webServerConfig.https){
+    try {
+        webServerConfig.key = fs.readFileSync(webServerConfig.key);
+        webServerConfig.cert = fs.readFileSync(webServerConfig.cert);
+        webServerConfig.protocol = 'https';
+      console.log("TAKING HTTPssssss");
+    } catch (e) {
+      console.log("TAKING HTTPPPPPP");
+      webServerConfig.protocol = 'http';
+    }
+  }
+  console.log("Taking "+ webServerConfig.protocol);
   if (configFilePath === false) {
     this.webServerConfig = {enabled: false};
     return;
@@ -460,6 +475,8 @@ Config.prototype.loadWebServerConfigFile = function() {
     // cli flags to `embark run` should override configFile and defaults (configObject)
     this.webServerConfig = utils.recursiveMerge(webServerConfig, this.webServerConfig);
   } else {
+    console.log("Taking 2"+ webServerConfig.protocol);
+
     this.webServerConfig = webServerConfig;
   }
 
